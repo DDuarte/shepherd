@@ -65,6 +65,7 @@ update_services() {
   local apprise_sidecar_url="${APPRISE_SIDECAR_URL:-}"
   local hostname
   hostname="${HOSTNAME:-$(hostname)}"
+  update_timeout="${UPDATE_TIMEOUT:-20}"
 
   [ "$supports_detach_option" = true ] && detach_option="--detach=false"
   [ "$supports_registry_auth" = true ] && registry_auth="--with-registry-auth"
@@ -91,7 +92,7 @@ update_services() {
         logger "Trying to update service $name with image $image" "true"
 
 	# shellcheck disable=SC2086
-        if ! docker "${config_flag[@]}" service update "$name" $detach_option $registry_auth $no_resolve_image_flag ${UPDATE_OPTIONS} --image="$image" > /dev/null; then
+        if ! timeout "$update_timeout" docker "${config_flag[@]}" service update "$name" $detach_option $registry_auth $no_resolve_image_flag ${UPDATE_OPTIONS} --image="$image" > /dev/null; then
           logger "Service $name update failed on $hostname!"
           if [[ "${ROLLBACK_ON_FAILURE+x}" ]]; then
             logger "Rolling $name back"
